@@ -16,18 +16,42 @@ def broadcast(message):
 def handle(client):
     while True:
         try:
-            message = client.recv(1024)
-            broadcast(message)
+            msg = message = client.recv(1024)
+
+            if msg.decode('ascii').startswith("KICK"):
+                if nicknames[clients.index(client)] == 'admin': # todo: roles
+                    name_to_kick = msg.decode('ascii')[5:]
+                    kick_user(name_to_kick)
+
+                else:
+                    client.send("Command was refused!\n")
+
+            elif msg.decode('ascii').startswith("BAN"):
+                if nicknames[clients.index(client)] == 'admin': # todo: roles
+                    name_to_ban = msg.decode('ascii')[5:]
+                    kick_user(name_to_ban)
+
+                    with open("bans.txt", "a") as f: #todo: hash and/or databases
+                        f.write(f"{name_to_ban}\n")
+
+                    print(f"{name_to_ban} was banned!\n")
+
+                else:
+                    client.send("Command was refused!\n")
+
+            else:
+                broadcast(message)
         except:
-            index = clients.index(client)
-            client.remove()
-            client.close()
+            if client in clients:
+                index = clients.index(client)
+                clients.remove(client)
+                client.close()
 
-            nickname = nicknames[index]
-            broadcast(colorama.Fore.RED + f"{nickname} left the chat!".encode('ascii') + colorama.Fore.RESET)
-            nicknames.remove(nickname)
+                nickname = nicknames[index]
+                broadcast(colorama.Fore.RED + f"{nickname} left the chat!".encode('ascii') + colorama.Fore.RESET)
+                nicknames.remove(nickname)
 
-            break
+                break
 
 def receive():
     while True:
@@ -36,6 +60,24 @@ def receive():
 
         client.send("NICK".encode('ascii'))
         nickname = client.recv(1024).decode('ascii')
+
+        with open("bans.txt", "r") as f: # todo: load from hash and/or database
+            bans = f.readlines()
+
+        if nickname+'\n' in bans:
+            client.send("BAN".encode('ascii'))
+            client.close()
+            continue
+
+        if nickname == "admin": # todo: roles
+            client.send("PASS".encode('ascii'))
+            password = client.recv(1024).decode('ascii')
+
+            if password != "adminpass": # todo: load from hash and/or databse
+                client.send("REFUSE".encode('ascii'))
+                client.close()
+                continue
+
         nicknames.append(nickname)
         clients.append(client)
 
@@ -45,6 +87,18 @@ def receive():
 
         thread = threading.Thread(target=handle, args=(client, ))
         thread.start()
+
+def kick_user(name):
+    if name in nicknames:
+        name_index = nicknames.index(name)
+        client_to_kick = clients[name_index]
+
+        clients.remove(client_to_kick)
+        client_to_kick.send("You were kicked by an admin!\n".encode('ascii'))
+        client_to_kick.close()
+
+        nicknames.remove(name)
+        broadcast(f"{name} was kicked!\n".encode('ascii'))
 
 if __name__ == "__main__":
     colorama.init()
