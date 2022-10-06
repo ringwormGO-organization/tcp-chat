@@ -1,6 +1,8 @@
 import socket
 import threading
 
+import colorama
+
 nickname = None
 client = None
 
@@ -26,9 +28,14 @@ def write():
         client.send(message.encode('ascii'))
 
 if __name__ == "__main__":
+    colorama.init()
+    print(colorama.Fore.LIGHTRED_EX + "ringwormGO TCP CHAT version".center(100))
+    print(colorama.Fore.LIGHTCYAN_EX + "((client, second generation))".center(100) + colorama.Fore.RESET)
+
     host = input("Enter an IP address: ")
     port = int(input("Enter a port: "))
     nickname = input("Enter a nickname: ")
+    print(" ")
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((host, port))
