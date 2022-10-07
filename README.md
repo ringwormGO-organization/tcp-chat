@@ -9,4 +9,7 @@ Simple TCP chat room written in Python
 - Install `python3`
 - Install `colorama` package
 - Run `server.py` and `client.py`
-**Server currently cannot send any mesages to clients**
+
+## Warnings
+-  Server cannot send messages
+- Broken in Python IDLE**
