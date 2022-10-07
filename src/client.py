@@ -1,4 +1,3 @@
-from math import nextafter
 import socket
 import threading
 
@@ -31,7 +30,7 @@ def receive():
                         stop_thread = True
 
                 elif next_message == "BAN":
-                    print("Connection refused because of ban!\n")
+                    print(colorama.Fore.RED + "Connection refused because of ban!\n" + colorama.Fore.RESET)
                     client.close()
                     stop_thread = True
 
